@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bag Fabric & Handle Cost Calculator</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --success: #15803d;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #475569;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .results-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .recommendation-box {
+            background-color: #ecfdf5;
+            border: 2px dashed var(--success);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            color: #065f46;
+            font-weight: bold;
+            font-size: 18px;
+            display: none;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .analysis-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .analysis-card h3 {
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 14px;
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-value {
+            font-weight: 600;
+        }
+
+        .highlight-total {
+            background-color: #f1f5f9;
+            padding: 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Bag Production Workshop Calculator</h1>
+    </header>
+
+    <div class="container">
+        <!-- Input Form Side Panel -->
+        <div class="card">
+            <div class="input-group">
+                <label>Bag Width (inches)</label>
+                <input type="number" id="bagWidth" value="14" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Bag Height (inches)</label>
+                <input type="number" id="bagHeight" value="16" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Number of Bags to Make</label>
+                <input type="number" id="numBags" value="500">
+            </div>
+            <div class="input-group">
+                <label>Fabric Roll Width / Panna (inches)</label>
+                <input type="number" id="panna" value="58" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Top Stitching Allowance per Edge (inches)</label>
+                <input type="number" id="topAllowance" value="1" step="0.1">
+            </div>
+            <div class="input-group text">
+                <label>Total Side Stitching Allowance (inches)</label>
+                <input type="number" id="sideAllowance" value="1" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Handle Cutting Length (inches)</label>
+                <input type="number" id="handleLength" value="28" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Handle Cutting Width (inches)</label>
+                <input type="number" id="handleWidth" value="3" step="0.1">
+            </div>
+            <div class="input-group">
+                <label>Handles Per Bag</label>
+                <input type="number" id="handlesPerBag" value="2">
+            </div>
+            <div class="input-group">
+                <label>Cost of Fabric per Meter (₹)</label>
+                <input type="number" id="costPerMeter" value="65" step="0.1">
+            </div>
+            <button onclick="runCalculator()">Calculate Layout</button>
+        </div>
+
+        <!-- Output Analytics Dashboard -->
+        <div class="results-layout">
+            <div id="recBox" class="recommendation-box"></div>
+            
+            <div class="analysis-grid">
+                <!-- Box Cutting Column -->
+                <div class="card analysis-card">
+                    <h3>Box Cutting Analysis</h3>
+                    <div id="boxResults">
+                        <div style="color: #64748b; text-align: center; padding: 40px 0;">Enter inputs and click calculate.</div>
+                    </div>
+                </div>
+
+                <!-- U Cutting Column -->
+                <div class="card analysis-card">
+                    <h3>U Cutting Analysis</h3>
+                    <div id="uResults">
+                        <div style="color: #64748b; text-align: center; padding: 40px 0;">Enter inputs and click calculate.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Object-Oriented Calculator Engine Class to match previous backend logic
+        class BagProductionCalculator {
+            constructor(config) {
+                this.bagWidth = config.bagWidth;
+                this.bagHeight = config.bagHeight;
+                this.numBags = config.numBags;
+                this.panna = config.panna;
+                this.topAllowance = config.topAllowance;
+                this.sideAllowance = config.sideAllowance;
+                this.bottomAllowance = 0.5; // Fixed common bottom allowance
+                this.handleLength = config.handleLength;
+                this.handleWidth = config.handleWidth;
+                this.handlesPerBag = config.handlesPerBag;
+                this.costPerMeter = config.costPerMeter;
+                this.totalHandlesNeeded = config.numBags * config.handlesPerBag;
+            }
+
+            evaluateStyle(styleName, cutW, cutH) {
+                // Option 1: Straight Layout
+                let fit1 = Math.floor(this.panna / cutW);
+                let len1 = fit1 > 0 ? Math.ceil(this.numBags / fit1) * cutH : Infinity;
+
+                // Option 2: Rotated Layout
+                let fit2 = Math.floor(this.panna / cutH);
+                let len2 = fit2 > 0 ? Math.ceil(this.numBags / fit2) * cutW : Infinity;
+
+                // Option 3: Mixed Layout Combination
+                let lenCombo = Infinity;
+                let straightRows = 0;
+                let rotatedRows = 0;
+
+                if (fit1 > 0 && fit2 > 0 && this.numBags > fit1) {
+                    straightRows = Math.floor(this.numBags / fit1);
+                    let bagsLeft = this.numBags - (straightRows * fit1);
+                    if (bagsLeft > 0) {
+                        rotatedRows = Math.ceil(bagsLeft / fit2);
+                        let possibleComboLen = (straightRows * cutH) + (rotatedRows * cutW);
+                        if (possibleComboLen < len1 && possibleComboLen < len2) {
+                            lenCombo = possibleComboLen;
+                        }
+                    }
+                }
+
+                let layoutDesc, bagInches, bagsPerRowDisplay, leftoverWidthDisplay;
+                let handlesFromA = 0, handlesFromB = 0;
+
+                // Determine layout selection rules
+                if (lenCombo <= len1 && lenCombo <= len2) {
+                    layoutDesc = `Mixed Combo (${straightRows} straight + ${rotatedRows} rotated)`;
+                    bagInches = lenCombo;
+
+
