@@ -3,65 +3,51 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS 
 
 app = Flask(**name**)
-CORS(app)  # This allows your HTML frontend to talk to this Python API smoothly 
+CORS(app) 
 
 def evaluate_style(style_name, cut_w, cut_h, inputs, total_handles_needed):
 panna = inputs["panna"]
 num_bags = inputs["num_bags"]
 handle_width = inputs["handle_width"]
 handle_length = inputs["handle_length"]
-cost_per_meter = inputs["cost_per_meter"]
-top_allowance = inputs["top_allowance"] 
-
-### --- Option 1: All Straight (Width along Panna) ---
+cost_per_meter = inputs["cost_per_meter"] 
 
 fit_1 = panna // cut_w if cut_w > 0 else 0
 if fit_1 > 0:
 rows_1 = math.ceil(num_bags / fit_1)
 len_1 = rows_1 * cut_h
 else:
-len_1, fit_1 = float('inf'), 0 
-
-### --- Option 2: All Rotated (Height along Panna) ---
+len_1, fit_1 = float('inf'), 0
 
 fit_2 = panna // cut_h if cut_h > 0 else 0
 if fit_2 > 0:
 rows_2 = math.ceil(num_bags / fit_2)
 len_2 = rows_2 * cut_w
 else:
-len_2, fit_2 = float('inf'), 0 
-
-### --- Option 3: Mixed Combo Layout ---
+len_2, fit_2 = float('inf'), 0
 
 len_combo = float('inf')
 straight_rows = 0
-rotated_rows = 0 
+rotated_rows = 0
 
 if fit_1 > 0 and fit_2 > 0 and num_bags > fit_1:
 straight_rows = num_bags // fit_1
-bags_left = num_bags - (straight_rows * fit_1) 
-
+bags_left = num_bags - (straight_rows * fit_1)
 if bags_left > 0:
-rotated_rows = math.ceil(bags_left / fit_2)
-possible_combo_len = (straight_rows * cut_h) + (rotated_rows * cut_w)
-if possible_combo_len < len_1 and possible_combo_len < len_2:
-    len_combo = possible_combo_len
-
-### Decide layout orientation
+    rotated_rows = math.ceil(bags_left / fit_2)
+    possible_combo_len = (straight_rows * cut_h) + (rotated_rows * cut_w)
+    
+    if possible_combo_len < len_1 and possible_combo_len < len_2:
+        len_combo = possible_combo_len
 
 if len_combo <= len_1 and len_combo <= len_2:
 layout_desc = f"Mixed Combo ({straight_rows} rows straight + {rotated_rows} rows rotated)"
-bag_inches = len_combo 
-
-### Section A Scrap
-
+bag_inches = len_combo
 len_sec_a = straight_rows * cut_h
 rem_w_a = panna % cut_w
 handles_w_a = rem_w_a // handle_width if handle_width > 0 else 0
 handles_l_a = len_sec_a // handle_length if handle_length > 0 else 0
-handles_from_a = handles_w_a * handles_l_a 
-
-# Section B Scrap
+handles_from_a = handles_w_a * handles_l_a
 
 len_sec_b = rotated_rows * cut_w
 rem_w_b = panna % cut_h
@@ -90,9 +76,7 @@ handles_w_2 = rem_w_2 // handle_width if handle_width > 0 else 0
 handles_l_2 = len_2 // handle_width if handle_width > 0 else 0
 total_handles_from_scrap = handles_w_2 * handles_l_2
 leftover_width_display = rem_w_2
-bags_per_row_display = fit_2 
-
-# Prevent crash if handle requirements or widths are zero
+bags_per_row_display = fit_2
 
 if total_handles_needed == 0 or handle_width == 0 or handle_length == 0:
 total_handles_from_scrap = 0
@@ -156,7 +140,7 @@ box_result = evaluate_style("Box Cutting", box_w, box_h, inputs, total_handles_n
 u_w = inputs["bag_width"] + inputs["side_allowance"]
 u_h = (2 * inputs["bag_height"]) + (2 * inputs["top_allowance"])
 u_result = evaluate_style("U Cutting", u_w, u_h, inputs, total_handles_needed)
-# Decide best style
+
 best_style = box_result if box_result["total_meters"] <= u_result["total_meters"] else u_result
 
 return jsonify({
