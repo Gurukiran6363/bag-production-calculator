@@ -1,17 +1,18 @@
+import os
 import math
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 app = Flask(__name__)
+# Enable CORS for frontend applications to communicate with this API
 CORS(app)
 
 @app.route('/calculate', methods=['POST'])
 def calculate_bag_production():
     try:
-        # Get data from your website frontend
-        data = request.get_json()
+        data = request.get_json() or {}
         
-        # 1. Map inputs exactly like your original variable names
+        # 1. Map inputs safely with fallback defaults
         bag_width = float(data.get("bag_width", 0))
         bag_height = float(data.get("bag_height", 0))
         num_bags = int(data.get("num_bags", 0))
@@ -31,8 +32,17 @@ def calculate_bag_production():
         total_handles_needed = num_bags * handles_per_bag
 
         def evaluate_style(style_name, cut_w, cut_h):
+            # Safe boundary check
+            if cut_w <= 0 or cut_h <= 0 or panna <= 0 or num_bags <= 0:
+                return {
+                    "style_name": style_name, "cut_w": float(cut_w), "cut_h": float(cut_h),
+                    "best_layout": "Invalid inputs", "bags_per_row": 0, "leftover_width": 0.0,
+                    "handles_from_scrap": 0, "extra_handles_needed": 0, "bag_meters": 0.0,
+                    "extra_handle_meters": 0.0, "total_meters": 0.0, "total_cost": 0.0
+                }
+
             # --- Option 1: All Straight (Width along Panna) ---
-            fit_1 = panna // cut_w if cut_w > 0 else 0
+            fit_1 = panna // cut_w
             if fit_1 > 0:
                 rows_1 = math.ceil(num_bags / fit_1)
                 len_1 = rows_1 * cut_h
@@ -40,7 +50,7 @@ def calculate_bag_production():
                 len_1, fit_1 = float('inf'), 0
 
             # --- Option 2: All Rotated (Height along Panna) ---
-            fit_2 = panna // cut_h if cut_h > 0 else 0
+            fit_2 = panna // cut_h
             if fit_2 > 0:
                 rows_2 = math.ceil(num_bags / fit_2)
                 len_2 = rows_2 * cut_w
@@ -98,7 +108,8 @@ def calculate_bag_production():
                 bag_inches = len_2
                 rem_w_2 = panna % cut_h
                 handles_w_2 = rem_w_2 // handle_width if handle_width > 0 else 0
-                handles_l_2 = len_2 // handle_width if handle_width > 0 else 0
+                # FIXED: Changed from handle_width to handle_length
+                handles_l_2 = len_2 // handle_length if handle_length > 0 else 0 
                 total_handles_from_scrap = handles_w_2 * handles_l_2
                 leftover_width_display = rem_w_2
                 bags_per_row_display = fit_2
@@ -150,7 +161,6 @@ def calculate_bag_production():
 
         best_style = box_result if box_result["total_meters"] <= u_result["total_meters"] else u_result
 
-        # Return structured data back to web browser
         return jsonify({
             "status": "success",
             "total_handles_needed": total_handles_needed,
@@ -160,6 +170,7 @@ def calculate_bag_production():
                 "best_style": best_style["style_name"],
                 "total_meters": best_style["total_meters"],
                 "total_cost": best_style["total_cost"],
+                # FIXED: Protect against division by zero error
                 "average_cost_per_bag": best_style["total_cost"] / num_bags if num_bags > 0 else 0
             }
         })
@@ -168,4 +179,6 @@ def calculate_bag_production():
         return jsonify({"status": "error", "message": str(e)}), 400
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # FIXED: Use Render's environment port variable with local fallback 
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
